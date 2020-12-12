@@ -1,0 +1,123 @@
+#Henrique Amorim Costa Melo 17/0144488
+#Paulo Goncalves Lima 17/0122549
+
+.data
+	invalid: .asciiz "Entradas invalidas\n"
+	notPrime: .asciiz "O modulo nao eh primo\n"
+	inverse: .asciiz "inverso =  "
+	nl: .asciiz "\n"
+
+
+.text
+main: li $v0 5
+			syscall 
+			add $t0 $zero $v0 # Salvando o numero 1 em t0
+			move $s0 $v0
+			
+			li $v0 5
+			syscall
+			move $s1 $v0 # Salvando o numero 2 em $s1
+			
+			ble $s1 1 invalidCase # Caso o numero seja menor que 1
+			ble $s0 1 invalidCase # Caso o numero seja menor que 1
+			
+			
+			mtc1 $t0, $f12 #movendo para refistradores de float
+  		cvt.s.w $f12, $f12 # convertendo para float
+      sqrt.s $f12, $f12 # Raiz Quadrada
+      
+      cvt.w.s $f12, $f12 # Convertendo para Int
+      mfc1 $t2 $f12 #Movendo para registradores inteiros
+      
+      jal PrimeBaseCase #Corritina para checar se o n1 é primo
+ 		
+ 			div $s1 $s0
+			mfhi $t3 # a % p
+			beqz $t3 invalidCase # Caso o a % b for iqual a 0 quer dizer que a é multiplo de p
+ 			
+ 			jal gcd
+ 			bne $v0 1 invalidCase # Caso não sejam coprimos
+ 			
+ 			
+ 			add $t0 $zero $s0 # num1
+			add $t1 $zero $s1 # num2
+			li $t2 1 # x
+			li $t3 0 # y
+ 			
+ InverseModLoop: beq $t1 1 result
+								 div $t1 $t0
+		 						 mflo $t4
+								 add $t5 $zero $t0
+		
+								 add $t1 $zero $t5
+								 mfhi $t0
+		
+								 add $t5 $zero $t3
+		
+								 mult $t4 $t3
+								 mflo $t6
+		
+								 sub $t3 $t2 $t6
+		
+								 add $t2 $zero $t5
+		
+		             j InverseModLoop
+
+
+
+result: bltzal $t2 negX
+	
+		la $a0 inverse
+		li $v0 4
+		syscall 
+		
+		li $v0 1
+		move $a0 $t2
+		syscall
+		
+		la $a0 nl
+		li $v0 4
+		syscall 
+		
+		j exit
+		
+negX: add $t2 $t2 $s0
+	      jr $ra
+	      
+gcd: move $t0 $s0 # Movendo o n1 para $t0
+     move $t1 $s1 # Movendo o n2 para $t1
+     
+gdcLoop: beq $t1 $0 return # Encontou o GCD(p,a)
+	       div $t0 $t1 
+	       move $t0 $t1
+	       mfhi $t1
+	       j gdcLoop
+	     
+return: move $v0 $t0
+	      jr $ra 
+incrementPrime: beq $t1 $t2 gcd # Caso o numero seja primo
+    						addi $t1, $t1, 1 # i++
+								j IsPrimeLoop
+								
+PrimeBaseCase: ble $s0 1 notPrimeCase # Caso do 0 e 1
+     					 ble $s0 3 gcd # Caso do 2 e 3
+     					 li $t1 2 # i do for para checar se o n1 é primo
+							 j IsPrimeLoop
+							 
+IsPrimeLoop: div $t0 $t1
+						 mfhi $t3 # $t0 % $t1
+						 beqz $t3 notPrimeCase # Caso $t0 % $t1 == 0 então o numero não é primo.
+						 j incrementPrime
+
+
+invalidCase: la $a0 invalid
+				     li $v0 4 
+				     syscall
+						 j exit
+notPrimeCase: la $a0 notPrime
+				      li $v0 4 
+				      syscall
+		    	  	j exit
+		    	  	
+exit: li $v0 10
+			syscall 

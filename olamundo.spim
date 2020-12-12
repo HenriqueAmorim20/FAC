@@ -1,0 +1,13 @@
+
+main: jal  print            # call print routine. 
+      li   $v0, 10          # system call for exit
+      syscall               # we are out of here.
+
+	.data	
+space:.asciiz  " "          # space to insert between numbers
+head: .asciiz  "Ola Mundo\n"
+      .text
+print:la   $a0, head        # load address of print heading
+      li   $v0, 4           # specify Print String service
+      syscall               # print heading
+
